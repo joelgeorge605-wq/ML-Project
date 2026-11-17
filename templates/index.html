@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}LoanWise | Check your loan eligibility{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <div class="hero-stage" aria-hidden="true">
+        <canvas class="rosette" data-rosette data-order="0.72" data-palette="gold"
+                data-zoom="1.1" data-scroll="true"></canvas>
+    </div>
+
+    <div class="hero-copy">
+        <h1>Find out if your loan will be approved before you apply.</h1>
+
+        <p class="hero-lede">
+            Enter your income, assets and CIBIL score.
+            {% if deployed and record_count %}
+            A {{ deployed_name }} model trained on {{ "{:,}".format(record_count) }} past applications
+            {% else %}
+            A machine learning model trained on past applications
+            {% endif %}
+            gives you a verdict and the probability behind it.
+        </p>
+
+        <div class="hero-actions">
+            <a href="/application" class="primary-btn">Check my eligibility</a>
+            {% if models %}<a href="#models" class="ghost-link">See how the model performs</a>{% endif %}
+        </div>
+
+        <dl class="hero-facts">
+            {% if record_count %}
+            <div>
+                <dt>Past applications</dt>
+                <dd>{{ "{:,}".format(record_count) }}</dd>
+            </div>
+            {% endif %}
+            {% if deployed %}
+            <div>
+                <dt>Test accuracy</dt>
+                <dd>{{ "%.1f"|format(deployed.accuracy) }}%</dd>
+            </div>
+            {% endif %}
+            <div>
+                <dt>Details you enter</dt>
+                <dd>11</dd>
+            </div>
+        </dl>
+    </div>
+</section>
+
+{% if models %}
+<section class="models" id="models">
+    <div class="models-inner">
+        <div>
+            <h2>Three algorithms tested, one kept</h2>
+            <p>
+                Each algorithm learned from the same applications and was scored on
+                applications it had not seen. The one marked here makes every
+                prediction on this site.
+            </p>
+        </div>
+
+        <ul class="model-list">
+            {% for m in models %}
+            <li class="model-row {% if m.name == deployed_name %}is-used{% endif %}">
+                <div class="model-row-head">
+                    <span class="model-name">{{ m.name }}{% if m.name == deployed_name %}<span class="model-badge">In use</span>{% endif %}</span>
+                    <span class="model-score">{{ "%.1f"|format(m.accuracy) }}%</span>
+                </div>
+                <div class="bar" role="img" aria-label="{{ m.name }} accuracy {{ '%.1f'|format(m.accuracy) }} percent">
+                    <i data-w="{{ '%.2f'|format(m.accuracy) }}" style="width: {{ '%.2f'|format(m.accuracy) }}%"></i>
+                </div>
+                <p class="model-meta">
+                    Precision {{ "%.1f"|format(m.precision) }}%, recall {{ "%.1f"|format(m.recall) }}%, F1 {{ "%.1f"|format(m.f1) }}%
+                </p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var bars = document.querySelectorAll(".bar > i");
+    if (!bars.length || !("IntersectionObserver" in window)) return;
+    bars.forEach(function (b) { b.style.width = "0"; });
+    var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+            if (e.isIntersecting) {
+                e.target.style.width = e.target.dataset.w + "%";
+                io.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.4 });
+    bars.forEach(function (b) { io.observe(b); });
+})();
+</script>
+{% endblock %}

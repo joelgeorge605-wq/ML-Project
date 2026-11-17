@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}{{ result }} | LoanWise{% endblock %}
+
+{% block footer %}&copy; 2026 LoanWise. This is a prediction from a machine learning model, not a bank decision.{% endblock %}
+
+{% block content %}
+
+<section class="result" data-status="{{ status }}">
+
+    <div class="result-stage" aria-hidden="true">
+        <canvas class="rosette" id="result-canvas" data-rosette
+                data-order="{{ (approval_probability / 100) | round(3) }}"
+                data-palette="{{ 'mint' if status == 'approved' else 'coral' }}"
+                data-zoom="1.1" data-spin="0.14"></canvas>
+    </div>
+
+    <div class="verdict-wrap">
+        <div class="verdict">
+
+            <h1>{{ result }}</h1>
+
+            <p class="verdict-lede">
+                {% if status == 'approved' %}
+                The model puts the chance of approval at <strong>{{ approval_probability }}%</strong>.
+                {% else %}
+                The model puts the chance of approval at <strong>{{ approval_probability }}%</strong>, so it predicts a rejection.
+                {% endif %}
+            </p>
+
+            <div class="split">
+                <div class="split-bar" role="img"
+                     aria-label="Approval {{ approval_probability }} percent, rejection {{ rejection_probability }} percent">
+                    <i class="yes" data-w="{{ approval_probability }}" style="flex: 0 0 calc({{ approval_probability }}% - 1.5px)"></i>
+                    <i class="no" style="flex: 1 1 0"></i>
+                </div>
+                <div class="split-labels">
+                    <div><strong>{{ approval_probability }}%</strong>Approval</div>
+                    <div><strong>{{ rejection_probability }}%</strong>Rejection</div>
+                </div>
+            </div>
+
+            <div class="summary">
+                <h2>Your application</h2>
+                <dl>
+                    <div class="summary-row"><dt>Annual income</dt><dd>{{ data['income_annum'] | inr }}</dd></div>
+                    <div class="summary-row"><dt>Loan amount</dt><dd>{{ data['loan_amount'] | inr }}</dd></div>
+                    <div class="summary-row"><dt>Loan term</dt><dd>{{ data['loan_term'] | int }} years</dd></div>
+                    <div class="summary-row"><dt>CIBIL score</dt><dd>{{ data['cibil_score'] | int }}</dd></div>
+                    <div class="summary-row"><dt>Total assets</dt><dd>{{ total_assets | inr }}</dd></div>
+                    {% if loan_to_income is not none %}
+                    <div class="summary-row"><dt>Loan to income</dt><dd>{{ '%.1f' | format(loan_to_income) }} times</dd></div>
+                    {% endif %}
+                    <div class="summary-row"><dt>Dependents</dt><dd>{{ data['no_of_dependents'] }}</dd></div>
+                    <div class="summary-row"><dt>Education</dt><dd>{{ data['education'] }}</dd></div>
+                    <div class="summary-row"><dt>Self-employed</dt><dd>{{ data['self_employed'] }}</dd></div>
+                </dl>
+            </div>
+
+            <div class="result-actions">
+                <a href="/application" class="primary-btn">Try another application</a>
+                <a href="/" class="ghost-link">Back to home</a>
+            </div>
+
+        </div>
+    </div>
+
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // The rosette spins up, then settles into the shape of this prediction.
+    var c = document.getElementById("result-canvas");
+    if (c && c._rosette) c._rosette.burst();
+
+    // Animate the probability bar from an even split to the real values.
+    var yes = document.querySelector(".split-bar .yes");
+    if (yes && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        var target = yes.style.flex;
+        yes.style.flex = "0 0 calc(50% - 1.5px)";
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () { yes.style.flex = target; });
+        });
+    }
+});
+</script>
+{% endblock %}

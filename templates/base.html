@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LoanWise{% endblock %}</title>
+    <meta name="theme-color" content="#06191c">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400..700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/" class="logo">Loan<span>Wise.</span></a>
+    <div class="nav-links">
+        <a href="/" {% if request.path == '/' %}aria-current="page"{% endif %}>Home</a>
+        <a href="/application" {% if request.path == '/application' %}aria-current="page"{% endif %}>Apply now</a>
+    </div>
+</nav>
+
+<main>
+{% block content %}{% endblock %}
+</main>
+
+<footer>
+    {% block footer %}&copy; 2026 LoanWise. Machine learning loan prediction, built as an educational project.{% endblock %}
+</footer>
+
+<script src="{{ url_for('static', filename='js/rosette.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
